@@ -1747,7 +1747,7 @@ static int32_t *initial_modular_step(
         int32_t **bdiv_xn,
         int32_t **blen_gb_xn,
         int32_t **bstart_cf_gb_xn,
-	int32_t **bextra_nf,
+	long **bextra_nf,
 	int32_t **blens_extra_nf,
 	int32_t **bexps_extra_nf,
 	int32_t **bcfs_extra_nf,
@@ -1767,6 +1767,7 @@ static int32_t *initial_modular_step(
         bs_t *gbg,
         md_t *md,
         const int32_t fc,
+	int32_t unstable_staircase,
         int print_gb,
         int *dim,
         long *dquot_ori,
@@ -1806,17 +1807,17 @@ static int32_t *initial_modular_step(
             fprintf(stderr, "Dimension of quotient: %ld\n", dquot);
         }
         if(print_gb==0){
-            /* *bmatrix = build_matrixn_from_bs_trace(bdiv_xn, */
-            /*         blen_gb_xn, */
-            /*         bstart_cf_gb_xn, */
-            /*         lmb, dquot, bs, bs->ht, */
-            /*         leadmons[0], bs->ht->nv, */
-            /*         fc, */
-            /*         md->info_level); */
+	  if (!unstable_staircase) {
+            *bmatrix = build_matrixn_from_bs_trace(bdiv_xn,
+                    blen_gb_xn,
+                    bstart_cf_gb_xn,
+                    lmb, dquot, bs, bs->ht,
+                    leadmons[0], bs->ht->nv,
+                    fc,
+                    md->info_level);
+	  }
+	  else {
 	    exp_t *mul  = (exp_t *)calloc(bs->ht->evl, sizeof(exp_t));
-	    fprintf (stderr, "entering build_matrixn\n");
-	    md->ff_bits = 32;
-	    md->fc = fc;
 	    *bmatrix = build_matrixn_unstable_from_bs_trace(bdiv_xn,
 							    blen_gb_xn,
 							    bstart_cf_gb_xn,
@@ -1826,8 +1827,9 @@ static int32_t *initial_modular_step(
 							    lmb, dquot, bs, bs->ht,
 							    leadmons[0], md, mul,
 							    bs->ht->nv,
-							    fc,
+							    fc, unstable_staircase,
 							    md->info_level);
+	    }
             if(*bmatrix == NULL){
                 *success = 0;
                 *dim = 0;
@@ -2066,6 +2068,7 @@ int msolve_trace_qq(mpz_param_t *mpz_paramp,
                     long *dquot_ptr,
                     data_gens_ff_t *gens,
                     int32_t ht_size, //initial_hts,
+                    int32_t unstable_staircase,
                     int32_t nr_threads,
                     int32_t max_nr_pairs,
                     int32_t elim_block_len,
@@ -2191,7 +2194,7 @@ int msolve_trace_qq(mpz_param_t *mpz_paramp,
   int32_t **bdiv_xn = (int32_t **)malloc(st->nthrds * sizeof(int32_t *));
   int32_t **blen_gb_xn = (int32_t **)malloc(st->nthrds * sizeof(int32_t *));
   int32_t **bstart_cf_gb_xn = (int32_t **)malloc(st->nthrds * sizeof(int32_t *));
-  int32_t **bextra_nf = (int32_t **)malloc(st->nthrds * sizeof(int32_t *));
+  long **bextra_nf = (long **)malloc(st->nthrds * sizeof(long *));
   int32_t **blens_extra_nf = (int32_t **)malloc(st->nthrds * sizeof(int32_t *));
   int32_t **bexps_extra_nf = (int32_t **)malloc(st->nthrds * sizeof(int32_t *));
   int32_t **bcfs_extra_nf = (int32_t **)malloc(st->nthrds * sizeof(int32_t *));
@@ -2237,6 +2240,7 @@ int msolve_trace_qq(mpz_param_t *mpz_paramp,
 					  &bsz, nmod_params,
 					  bs_qq, st,
 					  lp->p[0], //prime,
+					  unstable_staircase,
 					  print_gb,
 					  dim_ptr, dquot_ptr,
 					  gens,
@@ -2637,6 +2641,10 @@ int msolve_trace_qq(mpz_param_t *mpz_paramp,
     }
     free_fglm_bms_data(bdata_bms[i]);
     free_fglm_data(bdata_fglm[i]);
+    free(bextra_nf[i]);
+    free(blens_extra_nf[i]);
+    free(bexps_extra_nf[i]);
+    free(bcfs_extra_nf[i]);
     free(blen_gb_xn[i]);
     free(bstart_cf_gb_xn[i]);
     free(bdiv_xn[i]);
@@ -2675,6 +2683,10 @@ int msolve_trace_qq(mpz_param_t *mpz_paramp,
   free(bsquvars);
   free(is_lifted);
   free(num_gb);
+  free(bextra_nf);
+  free(blens_extra_nf);
+  free(bexps_extra_nf);
+  free(bcfs_extra_nf);
   free(blen_gb_xn);
   free(bstart_cf_gb_xn);
   free(bdiv_xn);
@@ -3453,6 +3465,7 @@ int real_msolve_qq(mpz_param_t *mpz_paramp,
                    real_point_t **real_pts_ptr,
                    data_gens_ff_t *gens,
                    int32_t ht_size, //initial_hts,
+		   int32_t unstable_staircase,
                    int32_t nr_threads,
                    int32_t max_nr_pairs,
                    int32_t elim_block_len,
@@ -3484,6 +3497,7 @@ int real_msolve_qq(mpz_param_t *mpz_paramp,
                           dquot_ptr,
                           gens,
                           ht_size, //initial_hts,
+			  unstable_staircase,
                           nr_threads,
                           max_nr_pairs,
                           elim_block_len,
@@ -3682,6 +3696,7 @@ int core_msolve(
   int32_t truncate_lifting,
   int32_t get_param,
   int32_t genericity_handling,
+  int32_t unstable_staircase,
   int32_t saturate,
   int32_t colon,
   int32_t normal_form,
@@ -4202,7 +4217,7 @@ restart:
                        real_roots_ptr,
                        real_pts_ptr,
                        gens,
-                       initial_hts, nr_threads, max_pairs,
+		       initial_hts, unstable_staircase, nr_threads, max_pairs,
                        elim_block_len, update_ht,
                        la_option, use_signatures, info_level, print_gb,
                        generate_pbm, precision, files, round, get_param);
@@ -4890,7 +4905,7 @@ restart:
                     real_roots_ptr,
                     real_pts_ptr,
                     gens,
-                    initial_hts, nr_threads, max_pairs,
+		    initial_hts, unstable_staircase, nr_threads, max_pairs,
                     elim_block_len, update_ht,
                     la_option, use_signatures, info_level, print_gb,
                     generate_pbm, precision, files, round, get_param);
@@ -5204,13 +5219,14 @@ void msolve_julia(
 
     /* main msolve functionality */
     int ret = core_msolve(la_option, use_signatures, nr_threads, info_level,
-            initial_hts, max_nr_pairs, elim_block_len, reset_ht,
+			  initial_hts, max_nr_pairs, elim_block_len, reset_ht,
                           0 /* generate pbm */, 1 /* reduce_gb */,
                           print_gb, 0 /*truncate_lifting*/, get_param,
-            genericity_handling, 0 /* saturate */, 0 /* colon */,
-	    0 /* normal_form */, 0 /* normal_form_matrix */,
-	    0 /* is_gb */, precision, files,
-            gens, &param, &mpz_param, &nb_real_roots, &real_roots, &real_pts);
+			  genericity_handling, 0 /* unstable_staircase -> change to 2?*/,
+			  0 /* saturate */, 0 /* colon */,
+			  0 /* normal_form */, 0 /* normal_form_matrix */,
+			  0 /* is_gb */, precision, files,
+			  gens, &param, &mpz_param, &nb_real_roots, &real_roots, &real_pts);
 
     if (ret == -1) {
         exit(1);
