@@ -1859,13 +1859,13 @@ static int32_t *initial_modular_step(
 
 
 static void secondary_modular_steps(sp_matfglm_t **bmatrix,
-				    int32_t **div_xn,
-				    int32_t **len_gb_xn,
-				    int32_t **start_cf_gb_xn,
-				    long **extra_nf, const long lextra_nf,
-				    int32_t **lens_extra_nf,
-				    int32_t **cfs_extra_nf,
-				    int32_t **exps_extra_nf,
+				    int32_t **bdiv_xn,
+				    int32_t **blen_gb_xn,
+				    int32_t **bstart_cf_gb_xn,
+				    long **bextra_nf, const long lextra_nf,
+				    int32_t **blens_extra_nf,
+				    int32_t **bcfs_extra_nf,
+				    int32_t **bexps_extra_nf,
 
 				    nvars_t *bnlins,
 				    nvars_t **blinvars,
@@ -1955,27 +1955,23 @@ static void secondary_modular_steps(sp_matfglm_t **bmatrix,
 
             set_linear_poly(bnlins[i], blineqs[i], blinvars[i], bs[i]->ht,
                     leadmons_current[i], bs[i]);
-	    if (!unstable_staircase) {
-	      build_matrixn_from_bs_trace_application(bmatrix[i],
-						      div_xn[i],
-						      len_gb_xn[i],
-						      start_cf_gb_xn[i],
-						      lmb_ori, dquot_ori, bs[i], bs[i]->ht,
-						      leadmons_ori[i], bs[i]->ht->nv,
-						      lp->p[i]);
-	    }
-	    else {
-	      build_matrixn_unstable_from_bs_trace_application(bmatrix[i],
-							       div_xn[i],
-							       len_gb_xn[i],
-							       start_cf_gb_xn[i],
-							       extra_nf[i], lextra_nf,
-							       lens_extra_nf[i],
-							       cfs_extra_nf[i],exps_extra_nf[i],
-							       lmb_ori, dquot_ori, bs[i], bs[i]->ht,
-							       leadmons_ori[i], st, bs[i]->ht->nv,
-							       lp->p[i]);
-	    }
+	    /* build_matrixn_from_bs_trace_application(bmatrix[i], */
+	    /* 					    div_xn[i], */
+	    /* 					    len_gb_xn[i], */
+	    /* 					    start_cf_gb_xn[i], */
+	    /* 					    lmb_ori, dquot_ori, bs[i], bs[i]->ht, */
+	    /* 					    leadmons_ori[i], bs[i]->ht->nv, */
+	    /* 					    lp->p[i]); */
+	    build_matrixn_unstable_from_bs_trace_application(bmatrix[i],
+							     bdiv_xn[i],
+							     blen_gb_xn[i],
+							     bstart_cf_gb_xn[i],
+							     bextra_nf[i], lextra_nf,
+							     blens_extra_nf[i],
+							     bcfs_extra_nf[i], bexps_extra_nf[i],
+							     lmb_ori, dquot_ori, bs[i], bs[i]->ht,
+							     leadmons_ori[i], st, bs[i]->ht->nv,
+							     lp->p[i]);
             if(nmod_fglm_compute_apply_trace_data(bmatrix[i], lp->p[i],
                         nmod_params[i],
                         bs[i]->ht->nv,
@@ -2354,7 +2350,6 @@ int msolve_trace_qq(mpz_param_t *mpz_paramp,
                                nmod_params, nlins, bnlins,
                                blinvars, lineqs_ptr,
                                bsquvars);
-
   normalize_nmod_param(nmod_params[0]);
 
   if(info_level){
@@ -2449,7 +2444,6 @@ int msolve_trace_qq(mpz_param_t *mpz_paramp,
   double strat = 0;
 
   while(rerun == 1 || mcheck == 1){
-
     /* controls call to rational reconstruction */
     doit = ((prdone%nbdoit) == 0);
 
