@@ -1834,6 +1834,9 @@ static int32_t *initial_modular_step(
 	      *success = 0;
 	      *dim = 0;
 	      *dquot_ori = dquot;
+	      if(md->info_level > 1){
+		fprintf (stdout,"------------------------------------------------------------------------------------------------------\n");
+	      }
 	      return NULL;
             }
 
@@ -2481,7 +2484,6 @@ int msolve_trace_qq(mpz_param_t *mpz_paramp,
     prime = lp->p[st->nthrds - 1];
 
     double ca0 = realtime();
-
     double stf4 = 0;
     secondary_modular_steps(bmatrix,
 			    bdiv_xn,
@@ -2522,8 +2524,16 @@ int msolve_trace_qq(mpz_param_t *mpz_paramp,
       if(info_level>1){
         fprintf(stderr, "Application phase %.2f Gops/sec\n",
                 (st->application_nr_add+st->application_nr_mult)/1000.0/1000.0/(stf4));
-        fprintf(stderr, "Multi-mod time: GB + fglm (elapsed): %.2f sec\n",
-                (ca1) );
+	/* JB to change */
+        /* fprintf(stderr, "Multi-mod time: GB + fglm (elapsed): %.2f sec\n", */
+        /*         (ca1) ); */
+      }
+      if(info_level){
+	    fprintf(stdout, "\n---------------- TIMINGS ----------------\n");
+	    fprintf(stdout, "multi-mod overall(elapsed) %9.2f sec\n", ca1);
+	    fprintf(stdout, "multi-mod F4               %9.2f sec\n", stf4);
+	    fprintf(stdout, "multi-mod FGLM             %9.2f sec\n", ca1-stf4);
+	    fprintf(stdout, "-----------------------------------------\n\n");
       }
     }
 
@@ -2628,8 +2638,12 @@ int msolve_trace_qq(mpz_param_t *mpz_paramp,
 
 
   if(info_level){
-    fprintf(stderr, "\n%d primes used\n", nprimes);
-    fprintf(stderr, "Time for CRT + rational reconstruction = %.2f\n", strat);
+    /* JB to change */
+    /* fprintf(stderr, "\n%d primes used\n", nprimes); */
+    /* fprintf(stderr, "Time for CRT + rational reconstruction = %.2f\n", strat); */
+    fprintf(stdout, "\n\n---------------- TIMINGS ----------------\n");
+    fprintf(stdout, "CRT and ratrecon(elapsed) %10.2f sec\n", st->fglm_rtime);
+    fprintf(stdout, "-----------------------------------------\n");
   }
 
   mpz_param_clear(tmp_mpz_param);
@@ -3534,8 +3548,14 @@ int real_msolve_qq(mpz_param_t *mpz_paramp,
   double rt1 = realtime();
 
   if(info_level && print_gb == 0){
-    fprintf(stderr, "Time for rational param: %13.2f (elapsed) sec / %5.2f sec (cpu)\n\n",
-            rt1 - rt0, ct1 - ct0);
+    /* JB to change */
+    /* fprintf(stderr, "Time for rational param: %13.2f (elapsed) sec / %5.2f sec (cpu)\n\n", */
+    /*         rt1 - rt0, ct1 - ct0); */
+    fprintf (stdout,
+	     "\n---------------- TIMINGS ----------------\n");
+    fprintf(stdout, "rational param(elapsed) %12.2f sec\n", rt1-rt0);
+    fprintf(stdout, "rational param(cpu) %16.2f sec\n", ct1-ct0);
+    fprintf(stdout, "-----------------------------------------\n");
   }
 
   if(get_param>1){
@@ -5290,7 +5310,7 @@ void msolve_julia(
     if (info_level > 0) {
         double st1 = cputime();
         double rt1 = realtime();
-        fprintf(stderr, "-------------------------------------------------\
+        fprintf(stderr, "\n-------------------------------------------------\
 -----------------------------------\n");
         fprintf(stderr, "msolve overall time  %13.2f sec (elapsed) / %5.2f sec (cpu)\n",
                 rt1-rt0, st1-st0);
