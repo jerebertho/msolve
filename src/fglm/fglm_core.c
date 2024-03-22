@@ -914,11 +914,6 @@ static inline long make_square_free_elim_poly(param_t *param,
       nmod_poly_mul(param->elim, param->elim, data_bms->sqf->p+i);
     }
     param->degsqfrelimpol = param->elim->length-1;
-    /* if(info_level){ */
-    /*   fprintf(stderr, "Degree of the square-free part: %ld\n", */
-    /*           param->elim->length-1); */
-    /*   fprintf(stderr, "[%ld, %ld, %ld]\n", dimquot, dim, param->elim->length - 1); */
-    /* } */
   }
 
   data_bms->sqf->num=0;
