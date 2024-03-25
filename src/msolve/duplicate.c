@@ -128,6 +128,8 @@ static inline void duplicate_data_mthread_trace(int nthreads,
   const long len_xn = len0 - lextra_nf;
   const long dquot = bmatrix[0]->ncols;
   const long len = num_gb[0] * (st->nvars);
+  const long degelimpol = bmatrix[0]->degelimpol;
+  const long degsqfrelimpol = bmatrix[0]->degsqfrelimpol;
 
   for(int i = 0; i <nthreads; i++){
     bnlins[i] = nlins;
@@ -178,6 +180,8 @@ static inline void duplicate_data_mthread_trace(int nthreads,
     bmatrix[i]->ncols = dquot;
     bmatrix[i]->nrows = len0;
     bmatrix[i]->nnfs  = lextra_nf;
+    bmatrix[i]->degelimpol = degelimpol;
+    bmatrix[i]->degsqfrelimpol = degsqfrelimpol;
     long len1 = dquot * len0;
     long len2 = dquot - len0;
 

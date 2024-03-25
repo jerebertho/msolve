@@ -117,6 +117,8 @@ typedef struct{
   double totaldensity;
   double freepartdensity;
   double nonfreepartdensity;
+  szmat_t degelimpol;
+  szmat_t degsqfrelimpol;
 } sp_matfglm_t;
 
 #ifndef ALIGNED32
@@ -165,8 +167,6 @@ typedef struct{
   nmod_poly_t elim;
   nmod_poly_t denom;
   nmod_poly_t *coords;
-  szmat_t degelimpol;
-  szmat_t degsqfrelimpol;
 } param_t;
 
 

@@ -72,8 +72,7 @@ double omp_get_wtime(void) { return realtime();}
 void print_fglm_data(
         FILE *file,
         const md_t * const st,
-	sp_matfglm_t *matrix,
-	param_t *param
+	sp_matfglm_t *matrix
 		     )
 {
   if (st->info_level > 0) {
@@ -90,9 +89,9 @@ void print_fglm_data(
     if(matrix->nnfs){
       fprintf(file, "density of the nonfree part     %5.1f%%\n", 100*matrix->nonfreepartdensity);
     }
-    fprintf(file, "deg. elim. pol.    %16lu\n", (unsigned long)param->degelimpol);
+    fprintf(file, "deg. elim. pol.    %16lu\n", (unsigned long)matrix->degelimpol);
     
-    fprintf(file, "deg. sqfr. elim. pol. %13lu\n", (unsigned long)param->degsqfrelimpol);
+    fprintf(file, "deg. sqfr. elim. pol. %13lu\n", (unsigned long)matrix->degsqfrelimpol);
     fprintf(file, "-----------------------------------------\n\n");
   }
 }
@@ -859,10 +858,11 @@ static inline void compute_elim_poly(fglm_data_t *data,
 
 static inline long make_square_free_elim_poly(param_t *param,
                                               fglm_bms_data_t *data_bms,
+					      sp_matfglm_t *matrix,
                                               long dimquot,
                                               int info_level){
   long dim = data_bms->BMS->V1->length - 1;
-  param->degelimpol = dim;
+  matrix->degelimpol = dim;
   
   int boo = nmod_poly_is_squarefree(data_bms->BMS->V1);
 
@@ -885,7 +885,7 @@ static inline long make_square_free_elim_poly(param_t *param,
     for(ulong i = 0; i < data_bms->sqf->num; i++){
       nmod_poly_mul(param->elim, param->elim, data_bms->sqf->p+i);
     }
-    param->degsqfrelimpol = param->elim->length-1;
+    matrix->degsqfrelimpol = param->elim->length-1;
     /* JB to change */
     /* if(info_level){ */
     /*   fprintf(stderr, "Degree of the square-free part: %ld\n", */
@@ -935,6 +935,7 @@ static inline long make_square_free_elim_poly_colon(param_t *param,
 static inline void compute_minpoly(param_t *param,
                                    fglm_data_t *data,
                                    fglm_bms_data_t *data_bms,
+				   sp_matfglm_t *matrix,
                                    long dimquot,
                                    nvars_t *linvars,
                                    uint32_t *lineqs,
@@ -948,7 +949,7 @@ static inline void compute_minpoly(param_t *param,
     data_bms->BMS->V1->coeffs[0] = 0;
     data_bms->BMS->V1->coeffs[1] = 1;
   }
-  *dim = make_square_free_elim_poly(param, data_bms, dimquot, info_level);
+  *dim = make_square_free_elim_poly(param, data_bms, matrix, dimquot, info_level);
 
 }
 
@@ -1625,7 +1626,7 @@ param_t *nmod_fglm_compute(sp_matfglm_t *matrix, const mod_t prime, const nvars_
   fglm_bms_data_t *data_bms = allocate_fglm_bms_data(dimquot, prime);
 
   long dim = 0;
-  compute_minpoly(param, data, data_bms, dimquot, linvars, lineqs, nvars, &dim,
+  compute_minpoly(param, data, data_bms, matrix, dimquot, linvars, lineqs, nvars, &dim,
                   info_level);
 
   if(info_level){
@@ -1782,7 +1783,7 @@ param_t *nmod_fglm_compute_trace_data(sp_matfglm_t *matrix, mod_t prime,
   *bdata_bms = allocate_fglm_bms_data(dimquot, prime);
 
   long dim = 0;
-  compute_minpoly(param, *bdata, *bdata_bms, dimquot, linvars, lineqs,
+  compute_minpoly(param, *bdata, *bdata_bms, matrix, dimquot, linvars, lineqs,
                   nvars, &dim, info_level);
 
   if(info_level > 1){
@@ -1882,7 +1883,7 @@ param_t *nmod_fglm_compute_trace_data(sp_matfglm_t *matrix, mod_t prime,
   }
   st->fglm_rtime = realtime() - st->fglm_rtime;
   st->fglm_ctime = cputime() - st->fglm_ctime;
-  print_fglm_data (stdout, st, matrix, param);
+  print_fglm_data (stdout, st, matrix);
   return param;
 }
 
@@ -1943,6 +1944,9 @@ int nmod_fglm_compute_apply_trace_data(sp_matfglm_t *matrix,
   }
 
   const ulong dimquot = (matrix->ncols);
+  const ulong halfseqlength = MIN(dimquot,matrix->degelimpol+2);
+  fprintf (stderr, "dimquot = %ld, halfseqlength = %ld\n",dimquot, halfseqlength);
+  /* +2 is a small buffer to ensure that the computed relation will be correct */
 
 #if DEBUGFGLM > 0
   print_vec(stderr, data_fglm->vecinit, matrix->ncols);
@@ -1955,7 +1959,7 @@ int nmod_fglm_compute_apply_trace_data(sp_matfglm_t *matrix,
   //////////////////////////////////////////////////////////////////
 
   /* generate_sequence(matrix, data_fglm, block_size, dimquot, prime, st); */
-  generate_sequence_verif(matrix, data_fglm, block_size, dimquot,
+  generate_sequence_verif(matrix, data_fglm, block_size, halfseqlength,
                           squvars, linvars, nvars, prime, st);
   //////////////////////////////////////////////////////////////////
 
@@ -1970,7 +1974,7 @@ int nmod_fglm_compute_apply_trace_data(sp_matfglm_t *matrix,
   fglm_bms_data_set_prime(data_bms, prime);
 
   long dim = 0;
-  compute_minpoly(param, data_fglm, data_bms, dimquot, linvars, lineqs, nvars, &dim,
+  compute_minpoly(param, data_fglm, data_bms, matrix, dimquot, linvars, lineqs, nvars, &dim,
                   info_level);
 
   if(info_level){
