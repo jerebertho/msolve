@@ -396,7 +396,7 @@ int main(int argc, char **argv){
       fclose(ofile);
     }
     /**
-       We get from files the requested data. 
+       We get from files the requested data.
     **/
     //  int32_t mon_order   = 0;
     int32_t nr_vars     = 0;
@@ -418,7 +418,7 @@ int main(int argc, char **argv){
       fprintf(stderr, "\t linear algebra option set to 2\n");
       la_option = 2;
     }
-    
+
     /* data structures for parametrization */
     param_t *param  = NULL;
     mpz_param_t *mpz_paramp = malloc(sizeof(mpz_param_t));
@@ -433,7 +433,7 @@ int main(int argc, char **argv){
                           initial_hts, max_pairs, elim_block_len, update_ht,
                           generate_pbm, reduce_gb, print_gb, truncate_lifting, get_param,
                           genericity_handling, unstable_staircase, saturate, colon, normal_form,
-                          normal_form_matrix, is_gb, precision, 
+                          normal_form_matrix, is_gb, precision,
                           files, gens,
             &param, mpz_paramp, &nb_real_roots, &real_roots, &real_pts);
 
@@ -454,7 +454,7 @@ int main(int argc, char **argv){
     if (info_level > 0) {
         double st1 = cputime();
         double rt1 = realtime();
-        fprintf(stderr, "-------------------------------------------------\
+        fprintf(stderr, "\n-------------------------------------------------\
 -----------------------------------\n");
         fprintf(stderr, "msolve overall time  %13.2f sec (elapsed) / %5.2f sec (cpu)\n",
                 rt1-rt0, st1-st0);
