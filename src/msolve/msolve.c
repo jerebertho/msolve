@@ -3852,30 +3852,43 @@ restart:
 	    printf("Length of the support of phi: %lu\n",
 		   suppsize);
 
+	    /* segfault */
+	    #if 0
 	    /* sht and hcm will store the support of the normal form in tbr. */
 	    ht_t *sht   = initialize_secondary_hash_table(bht, st);
 	    hi_t *hcm   = (hi_t *)malloc(sizeof(hi_t));
 	    mat_t *mat  = (mat_t *)calloc(1, sizeof(mat_t));
-
+	    printf ("mat\n");
+	    
 	    /* printf("Starts computation of normal form matrix\n"); */
 	    get_normal_form_matrix(tbr, bht, 1,
 				   st, &sht, &hcm, &mat);
 	    printf("Length of union of support of all normal forms: %u\n",
 		   mat->nc);
 
-	    /* printf("\nUnion of support, sorted by decreasing monomial order:\n"); */
-	    /* for (len_t k = 0; k < mat->nc; ++k) { */
-	    /*   for (len_t l = 1; l <= sht->nv; ++l) { */
-	    /* 	printf("%2u ", sht->ev[hcm[k]][l]); */
-	    /*   } */
-	    /*   printf("\n"); */
-	    /* } */
+	    printf("\nUnion of support, sorted by decreasing monomial order:\n");
+	    for (len_t k = 0; k < mat->nc; ++k) {
+	      for (len_t l = 1; l <= sht->nv; ++l) {
+		printf("%2u ", sht->ev[hcm[k]][l]);
+	      }
+	      printf("\n");
+	    }
+	    #endif
 
 	    int32_t *bcf_ff = (int32_t *)(*bcf);
-	    int32_t *bexp_lm = get_lead_monomials(bld, blen, bexp, gens);
+	    printf ("bcf\n");
+	    int32_t *bexp_lm = get_lead_monomials(bld, blen, bexp,
+						  gens);
+	    printf ("bexp\n");
 
-	    long maxdeg = sht->ev[hcm[0]][0]; /* degree of the normal
+	    long maxdeg = bht->ev[bs->hm[0]][0]; /* degree of the normal
 						 form */
+	    /* long maxdeg = 0; /\* degree of the normal form *\/ */
+	    /* for (long k = 0; k < gens->nvars; k++) { */
+	    /*   maxdeg += bht->ev[hm[0]][ */
+	    /* } */
+	    
+	    printf ("maxdeg %ld\n",maxdeg);
 	    for (long i = 0; i < bld[0]; i++) {
 	      long degi = 0;
 	      for (long k = 0; k < gens->nvars; k++) {
@@ -3992,12 +4005,12 @@ restart:
 	    free(lmb);
 	    free(bexp_lm);
 	    free(bcf_ff);
-	    free(hcm);
+	    /* free(hcm); */
 	    free (mul);
-	    hcm = NULL;
-	    if (sht != NULL) {
-	      free_hash_table(&sht);
-	    }
+	    /* hcm = NULL; */
+	    /* if (sht != NULL) { */
+	    /*   free_hash_table(&sht); */
+	    /* } */
 
             /* free and clean up */
             if (bs != NULL) {
