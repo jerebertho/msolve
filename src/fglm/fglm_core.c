@@ -90,14 +90,8 @@ void print_fglm_data(
     if(matrix->nnfs){
       fprintf(file, "density of the nonfree part     %5.1f%%\n", 100*matrix->nonfreepartdensity);
     }
-<<<<<<< HEAD
     fprintf(file, "deg. elim. pol.    %16lu\n", (unsigned long)param->degelimpol);
     fprintf(file, "deg. sqfr. elim. pol. %13lu\n", (unsigned long)param->degsqfrelimpol);
-=======
-    fprintf(file, "deg. elim. pol.    %16lu\n", (unsigned long)matrix->degelimpol);
-
-    fprintf(file, "deg. sqfr. elim. pol. %13lu\n", (unsigned long)matrix->degsqfrelimpol);
->>>>>>> 0d6c9b7 (reduce sequence length for tracer FGLM in non shape position case)
     fprintf(file, "-----------------------------------------\n\n");
   }
 }
