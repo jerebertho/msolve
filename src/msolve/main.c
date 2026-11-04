@@ -106,6 +106,9 @@ static inline void display_help(char *str){
   display_option_help_noopt("0 - Nothing is printed. (default)\n");
   display_option_help_noopt("1 - Leading ideal is printed.\n");
   display_option_help_noopt("2 - Full reduced Groebner basis is printed.\n");
+  display_option_help_noopt("3 - Reduced Groebner basis w.r.t. the lexicographical\n");
+  display_option_help_noopt("    ordering, by classical FGLM (zero-dimensional ideals,\n");
+  display_option_help_noopt("    prime fields only).\n");
   display_option_help('c',"", "GEN", "Handling genericity: If the staircase is not generic\n");
   display_option_help_noopt("enough, msolve can automatically try to fix this\n");
   display_option_help_noopt("situation via first trying a change of the order of\n");
@@ -348,8 +351,8 @@ static void getoptions(
       if (*print_gb < 0) {
           *print_gb = 0;
       }
-      if (*print_gb > 2) {
-          *print_gb = 2;
+      if (*print_gb > 3) {
+          *print_gb = 3;
       }
       break;
     case 'c':
