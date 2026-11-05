@@ -16,6 +16,7 @@ EXTRA_DIST	=	  msolve-data.h \
 								linear.c \
 								lifting.c \
 								lifting-gb.c \
+								lifting-lexgb.c \
 								iofiles.c \
 								msolve.c \
 								primes.c \
