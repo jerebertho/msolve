@@ -20,6 +20,7 @@ EXTRA_DIST	=	  msolve-data.h \
 								splitting.c \
 								hensel.c \
 								boolean-zeros.c \
+								lifting-lexgb.c \
 								iofiles.c \
 								msolve.c \
 								primes.c \
