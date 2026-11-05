@@ -257,12 +257,21 @@ AC_CONFIG_LINKS([
  input_files/lexgb-nonradical-31.ms:input_files/lexgb-nonradical-31.ms
  output_files/lexgb-nonradical-31.g3.res:output_files/lexgb-nonradical-31.g3.res
  test/diff/diff_lexgb-nonradical-31.sh:test/diff/diff_lexgb-nonradical-31.sh
+ input_files/lexgb-nonradical-qq.ms:input_files/lexgb-nonradical-qq.ms
+ output_files/lexgb-nonradical-qq.g3.res:output_files/lexgb-nonradical-qq.g3.res
+ test/diff/diff_lexgb-nonradical-qq.sh:test/diff/diff_lexgb-nonradical-qq.sh
  input_files/lexgb-nonshape-31.ms:input_files/lexgb-nonshape-31.ms
  output_files/lexgb-nonshape-31.g3.res:output_files/lexgb-nonshape-31.g3.res
  test/diff/diff_lexgb-nonshape-31.sh:test/diff/diff_lexgb-nonshape-31.sh
+ input_files/lexgb-nonshape-qq.ms:input_files/lexgb-nonshape-qq.ms
+ output_files/lexgb-nonshape-qq.g3.res:output_files/lexgb-nonshape-qq.g3.res
+ test/diff/diff_lexgb-nonshape-qq.sh:test/diff/diff_lexgb-nonshape-qq.sh
  input_files/lexgb-shape-31.ms:input_files/lexgb-shape-31.ms
  output_files/lexgb-shape-31.g3.res:output_files/lexgb-shape-31.g3.res
  test/diff/diff_lexgb-shape-31.sh:test/diff/diff_lexgb-shape-31.sh
+ input_files/lexgb-shape-qq.ms:input_files/lexgb-shape-qq.ms
+ output_files/lexgb-shape-qq.g3.res:output_files/lexgb-shape-qq.g3.res
+ test/diff/diff_lexgb-shape-qq.sh:test/diff/diff_lexgb-shape-qq.sh
  input_files/linear0-qq.ms:input_files/linear0-qq.ms
  output_files/linear0-qq.P2.d0.res:output_files/linear0-qq.P2.d0.res
  test/diff/diff_linear0-qq.sh:test/diff/diff_linear0-qq.sh

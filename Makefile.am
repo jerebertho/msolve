@@ -58,8 +58,11 @@ checkdiff               = test/diff/diff_bug-2nd-prime-bad.sh \
 			  test/diff/diff_kat7-qq.sh \
 			  test/diff/diff_kat8-qq-truncate.sh \
 			  test/diff/diff_lexgb-nonradical-31.sh \
+			  test/diff/diff_lexgb-nonradical-qq.sh \
 			  test/diff/diff_lexgb-nonshape-31.sh \
+			  test/diff/diff_lexgb-nonshape-qq.sh \
 			  test/diff/diff_lexgb-shape-31.sh \
+			  test/diff/diff_lexgb-shape-qq.sh \
 			  test/diff/diff_line-endings.sh \
 			  test/diff/diff_linear0-qq.sh \
 			  test/diff/diff_linear1-qq.sh \
