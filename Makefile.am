@@ -53,6 +53,7 @@ checkdiff               = test/diff/diff_bug-2nd-prime-bad.sh \
 			  test/diff/diff_kat6-52.sh \
 			  test/diff/diff_kat6-gf16.sh \
 			  test/diff/diff_kat6-gf256.sh \
+			  test/diff/diff_kat6sq-qq.sh \
 			  test/diff/diff_random6-gf256-int.sh \
 			  test/diff/diff_random8-gf2.sh \
 			  test/diff/diff_kat7-qq.sh \

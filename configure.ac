@@ -243,6 +243,9 @@ AC_CONFIG_LINKS([
  input_files/kat6-gf256.ms:input_files/kat6-gf256.ms
  output_files/kat6-gf256.g2.res:output_files/kat6-gf256.g2.res
  test/diff/diff_kat6-gf256.sh:test/diff/diff_kat6-gf256.sh
+ input_files/kat6sq-qq.ms:input_files/kat6sq-qq.ms
+ output_files/kat6sq-qq.g3.res:output_files/kat6sq-qq.g3.res
+ test/diff/diff_kat6sq-qq.sh:test/diff/diff_kat6sq-qq.sh
  input_files/random6-gf256-int.ms:input_files/random6-gf256-int.ms
  output_files/random6-gf256-int.g2.res:output_files/random6-gf256-int.g2.res
  test/diff/diff_random6-gf256-int.sh:test/diff/diff_random6-gf256-int.sh
