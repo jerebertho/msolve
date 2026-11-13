@@ -1107,7 +1107,9 @@ void linear_algebra(
             }
             return;
         case 8:
-            if (st->fc == 2) {
+            /* the GF(2) linear algebra interreduces the rows, which is
+             * wrong for normal forms (st->nf): generic 8 bit one then */
+            if (st->fc == 2 && st->nf == 0) {
                 exact_sparse_linear_algebra_gf2(mat, tbr, bs, st);
                 return;
             }
@@ -1214,7 +1216,9 @@ void exact_linear_algebra(
             exact_sparse_linear_algebra_qq(mat, tbr, bs, st);
             return;
         case 8:
-            if (st->fc == 2) {
+            /* the GF(2) linear algebra interreduces the rows, which is
+             * wrong for normal forms (st->nf): generic 8 bit one then */
+            if (st->fc == 2 && st->nf == 0) {
                 exact_sparse_linear_algebra_gf2(mat, tbr, bs, st);
                 return;
             }
