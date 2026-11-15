@@ -114,9 +114,13 @@ static inline void display_help(char *str){
   display_option_help_noopt("0 - Nothing is printed. (default)\n");
   display_option_help_noopt("1 - Leading ideal is printed.\n");
   display_option_help_noopt("2 - Full reduced Groebner basis is printed.\n");
-  display_option_help_noopt("3 - Reduced Groebner basis w.r.t. the lexicographical\n");
-  display_option_help_noopt("    ordering, by classical FGLM (zero-dimensional ideals;\n");
-  display_option_help_noopt("    over Q, multi-modular FGLM with a tracer).\n");
+  display_option_help('x', "lex-groebner-basis", "LEX", "Prints the reduced Groebner basis of a zero-dimensional\n");
+  display_option_help_noopt("ideal w.r.t. the lexicographical ordering, by classical\n");
+  display_option_help_noopt("FGLM (over Q: multi-modular FGLM with a tracer).\n");
+  display_option_help_noopt("Cannot be used together with option -g.\n");
+  display_option_help_noopt("0 - Nothing is printed. (default)\n");
+  display_option_help_noopt("1 - Leading ideal is printed.\n");
+  display_option_help_noopt("2 - Full reduced Groebner basis is printed.\n");
   display_option_help('c',"", "GEN", "Handling genericity: If the staircase is not generic\n");
   display_option_help_noopt("enough, msolve can automatically try to fix this\n");
   display_option_help_noopt("situation via first trying a change of the order of\n");
@@ -291,7 +295,8 @@ static void getoptions(
   char *filename = NULL;
   char *out_fname = NULL;
   opterr = 1;
-  char short_options[] = "c:Cd:e:f:g:hil:L:m:M:n:N:o:p:P:q:r:s:St:u:v:V";
+  char short_options[] = "c:Cd:e:f:g:hil:L:m:M:n:N:o:p:P:q:r:s:St:u:v:Vx:";
+  int32_t lex_gb = 0;
 
   /* For long options that have no equivalent short option, use a
      non-character as a pseudo short option, starting with CHAR_MAX + 1.
@@ -318,6 +323,7 @@ static void getoptions(
     {"elimination", required_argument, NULL, 'e'},
     {"file", required_argument, NULL, 'f'},
     {"groebner-basis", required_argument, NULL, 'g'},
+    {"lex-groebner-basis", required_argument, NULL, 'x'},
     {"help", no_argument, NULL, 'h'},
     {"lex", no_argument, NULL, LEX_OPTION},
     {"linear-algebra", required_argument, NULL, 'l'},
@@ -492,8 +498,17 @@ static void getoptions(
       if (*print_gb < 0) {
           *print_gb = 0;
       }
-      if (*print_gb > 3) {
-          *print_gb = 3;
+      if (*print_gb > 2) {
+          *print_gb = 2;
+      }
+      break;
+    case 'x':
+      lex_gb = strtol(optarg, NULL, 10);
+      if (lex_gb < 0) {
+          lex_gb = 0;
+      }
+      if (lex_gb > 2) {
+          lex_gb = 2;
       }
       break;
     case 'c':
@@ -547,6 +562,19 @@ static void getoptions(
     fprintf(ERRSTREAM, "Invalid usage\n");
     display_help(argv[0]);
     exit(1);
+  }
+  /* lex Gb: internal values of print_gb, 3 (leading ideal)
+   * or 4 (full basis) */
+  if(lex_gb > 0){
+    if(*print_gb > 0){
+      fprintf(ERRSTREAM, "Options -g and -x cannot be used together.\n");
+      exit(1);
+    }
+    if(*saturate || *colon || *normal_form){
+      fprintf(ERRSTREAM, "Option -x cannot be used together with -S, -C or -n.\n");
+      exit(1);
+    }
+    *print_gb = lex_gb + 2;
   }
   files->in_file = filename;
   files->out_file = out_fname;
