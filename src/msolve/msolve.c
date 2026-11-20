@@ -1776,6 +1776,9 @@ static inline int rational_reconstruction_param(
   }
   if(trace_det->mat_lifted == 1){
       check_matrix(trace_det, mat, prime);
+      if(trace_det->mat_lifted == 2 && info_level){
+          fprintf(VERBSTREAM, "[L]");
+      }
   }
   mpz_mul_ui(prod_crt, modulus, prime);
   if(trace_det->w_checked == trace_det->nrows && trace_det->mat_lifted == 0){

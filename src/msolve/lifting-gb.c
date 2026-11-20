@@ -1809,7 +1809,7 @@ restart:
       }
       if(dlift->lstart != lstart){
         if(info_level){
-          fprintf(VERBSTREAM, "<%.2f%%>", 100* (float)MIN((dlift->lstart + 1), (*modgbsp)->ld)/(*modgbsp)->ld);
+          fprintf(VERBSTREAM, "<%.2f%%>", 100* (float)dlift->lstart/(*modgbsp)->ld);
 	      fflush(VERBSTREAM);
         }
         lstart = dlift->lstart;
