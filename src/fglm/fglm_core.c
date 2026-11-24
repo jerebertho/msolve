@@ -668,26 +668,48 @@ static void generate_matrix_sequence(sp_matfglm_t *matxn, fglm_data_t *data,
 }
 #endif
 
-/* Early termination of Berlekamp-Massey: adds s_i to B (npts = i + 1 points);
- * when npts reaches *next, returns 1 if the linear complexity L of the points
- * is < D and npts >= 2 L + 32, i.e. the minimal generator predicts the last 32
- * points: very likely, the minimal polynomial has degree L < D. The next
- * check is max(16, npts / 64) points later: O(log D) calls to the half-gcd of
- * FLINT (quasi-linear), at most 1/64 more points than needed. */
-static inline int fglm_seq_early_stop(nmod_berlekamp_massey_struct *B,
-                                      const CF_t s, const szmat_t npts,
-                                      const szmat_t D, szmat_t *next){
-  nmod_berlekamp_massey_add_point(B, s);
-  if(npts < *next){
-    return 0;
+/* Early termination of Berlekamp-Massey on the scalar sequence. */
+typedef struct {
+  nmod_berlekamp_massey_struct *B; /* receives the points */
+  szmat_t next;                    /* number of points of the next check */
+  szmat_t margin;                  /* points predicted beyond 2 L */
+} fglm_et_t;
+
+/* Margin without fallback (parametrizations). If the full sequence has
+ * linear complexity > L, its first N <= deg minpoly terms are uniform in
+ * F_p^N (v is uniform), and a uniform sequence of length N has linear
+ * complexity <= L < N / 2 with probability p^(2L - N). So a check with
+ * N >= 2 L + m stops wrongly with probability about p^-m (own reasoning,
+ * heuristic when N > deg minpoly). m >= 74 / log2(p): with at most 2^10
+ * checks, total probability <= 2^-64; at least 32 (cost: m products). */
+static inline szmat_t fglm_et_margin(const mod_t p){
+  szmat_t b = 1;            /* max(1, floor(log2(p))) */
+  while(b < 31 && ((mod_t)2 << b) <= p){
+    b++;
   }
-  *next = npts + (npts / 64 > 16 ? npts / 64 : 16);
-  nmod_berlekamp_massey_reduce(B);
-  const slong L = nmod_berlekamp_massey_V_poly(B)->length - 1;
-  return L < (slong)D && (slong)npts >= 2 * L + 32;
+  const szmat_t m = (74 + b - 1) / b;
+  return m > 32 ? m : 32;
 }
 
-/* If et != NULL, the scalar sequence is also added to et, and the
+/* Adds s_i to et->B (npts = i + 1 points); when npts reaches et->next,
+ * returns 1 if the linear complexity L of the points is < D and
+ * npts >= 2 L + margin, i.e. the minimal generator predicts the last margin
+ * points: very likely, the minimal polynomial has degree L < D. The next
+ * check is max(16, npts / 64) points later: O(log D) calls to the half-gcd
+ * of FLINT (quasi-linear), at most 1/64 more points than needed. */
+static inline int fglm_seq_early_stop(fglm_et_t *et, const CF_t s,
+                                      const szmat_t npts, const szmat_t D){
+  nmod_berlekamp_massey_add_point(et->B, s);
+  if(npts < et->next){
+    return 0;
+  }
+  et->next = npts + (npts / 64 > 16 ? npts / 64 : 16);
+  nmod_berlekamp_massey_reduce(et->B);
+  const slong L = nmod_berlekamp_massey_V_poly(et->B)->length - 1;
+  return L < (slong)D && (slong)npts >= 2 * L + (slong)et->margin;
+}
+
+/* If et != NULL, the scalar sequence is also added to et->B, and the
  * computation stops (returns 0) on early termination (fglm_seq_early_stop).
  * Returns 1 if the whole sequence is computed. */
 static int generate_sequence_verif(sp_matfglm_t *matrix, fglm_data_t * data,
@@ -697,10 +719,9 @@ static int generate_sequence_verif(sp_matfglm_t *matrix, fglm_data_t * data,
                                     nvars_t nvars,
                                     mod_t prime,
                                     md_t *st,
-                                    nmod_berlekamp_massey_struct *et)
+                                    fglm_et_t *et)
 {
-  szmat_t next = 16;   /* next check of the early termination */
-  if(et != NULL && fglm_seq_early_stop(et, data->res[0], 1, dimquot, &next)){
+  if(et != NULL && fglm_seq_early_stop(et, data->res[0], 1, dimquot)){
     return 0;
   }
   int dec= 0;
@@ -725,8 +746,7 @@ static int generate_sequence_verif(sp_matfglm_t *matrix, fglm_data_t * data,
     data->vvec = tmp;
     data->res[i*block_size] = data->vecinit[0];
     if(et != NULL
-       && fglm_seq_early_stop(et, data->res[i*block_size], i + 1, dimquot,
-                              &next)){
+       && fglm_seq_early_stop(et, data->res[i*block_size], i + 1, dimquot)){
       return 0;
     }
 
@@ -763,8 +783,7 @@ static int generate_sequence_verif(sp_matfglm_t *matrix, fglm_data_t * data,
     data->vvec = tmp;
     data->res[i*block_size] = data->vecinit[0];
     if(et != NULL
-       && fglm_seq_early_stop(et, data->res[i*block_size], i + 1, dimquot,
-                              &next)){
+       && fglm_seq_early_stop(et, data->res[i*block_size], i + 1, dimquot)){
       return 0;
     }
 
@@ -852,6 +871,17 @@ static inline void compute_minpoly(param_t *param,
                                    long dimquot)
 {
   compute_elim_poly(data, data_bms, dimquot);
+  make_square_free_elim_poly(param, data_bms, dimquot);
+}
+
+/* Same as compute_minpoly when the points are already in data_bms->BMS
+ * (early termination, generate_sequence_verif with et != NULL) */
+static inline void compute_minpoly_et(param_t *param,
+                                      fglm_bms_data_t *data_bms,
+                                      long dimquot)
+{
+  nmod_berlekamp_massey_reduce(data_bms->BMS);
+  nmod_poly_make_monic(data_bms->BMS->V1, data_bms->BMS->V1);
   make_square_free_elim_poly(param, data_bms, dimquot);
 }
 
@@ -1531,8 +1561,11 @@ param_t *nmod_fglm_compute_trace_data(sp_matfglm_t *matrix, mod_t prime,
     fprintf(VERBSTREAM, "                                                 ");
     fflush(VERBSTREAM);
   }
+  /* Berlekamp-Massey data, also used for the early termination */
+  *bdata_bms = allocate_fglm_bms_data(dimquot, prime);
+  fglm_et_t et = {(*bdata_bms)->BMS, 16, fglm_et_margin(prime)};
   generate_sequence_verif(matrix, *bdata, block_size, dimquot,
-                          squvars, linvars, nvars, prime, st, NULL);
+                          squvars, linvars, nvars, prime, st, &et);
 #endif
 
   if(info_level > 1){
@@ -1550,10 +1583,7 @@ param_t *nmod_fglm_compute_trace_data(sp_matfglm_t *matrix, mod_t prime,
     fflush(VERBSTREAM);
   }
 
-  /* Berlekamp-Massey data */
-  *bdata_bms = allocate_fglm_bms_data(dimquot, prime);
-
-  compute_minpoly(param, *bdata, *bdata_bms, dimquot);
+  compute_minpoly_et(param, *bdata_bms, dimquot);
 
   if(info_level > 1){
     /* fprintf(ERRSTREAM, "Time spent to compute eliminating polynomial (elapsed): %.2f sec\n", */
@@ -1708,9 +1738,11 @@ param_t *nmod_fglm_shape(sp_matfglm_t *matrix, mod_t prime,
     fprintf(VERBSTREAM, "                                                 ");
     fflush(VERBSTREAM);
   }
+  /* margin 32: classical FGLM is the fallback */
+  fglm_et_t et = {bms->BMS, 16, 32};
   const int full = generate_sequence_verif(matrix, data, block_size, D,
                                            squvars, linvars, nvars, prime,
-                                           st, bms->BMS);
+                                           st, &et);
   if (info_level > 1) {
     fprintf(VERBSTREAM, "%15.2f | %-13.2f\n", realtime() - rt, cputime() - ct);
   }
@@ -1788,6 +1820,7 @@ int nmod_fglm_compute_apply_trace_data(sp_matfglm_t *matrix,
                                        fglm_data_t *data_fglm,
                                        fglm_bms_data_t *data_bms,
                                        const long deg_init,
+                                       const long degelim,
                                        const int info_level,
 				       md_t *st){
 #if DEBUGFGLM > 0
@@ -1843,9 +1876,18 @@ int nmod_fglm_compute_apply_trace_data(sp_matfglm_t *matrix,
 
   //////////////////////////////////////////////////////////////////
 
-  /* generate_sequence(matrix, data_fglm, block_size, dimquot, prime, st); */
+  /* early termination: first check after 2 degelim + margin points,
+   * degelim being the degree of the minimal polynomial on the first prime;
+   * if the degree differs here, the usual checks follow (none if
+   * degelim = D, as 2 D + margin points are never reached) */
+  fglm_bms_data_set_prime(data_bms, prime);
+  const szmat_t margin = fglm_et_margin(prime);
+  fglm_et_t et = {data_bms->BMS, 16, margin};
+  if(degelim > 0){
+    et.next = 2 * degelim + margin;
+  }
   generate_sequence_verif(matrix, data_fglm, block_size, dimquot,
-                          squvars, linvars, nvars, prime, st, NULL);
+                          squvars, linvars, nvars, prime, st, &et);
   //////////////////////////////////////////////////////////////////
 
   if(info_level){
@@ -1856,9 +1898,7 @@ int nmod_fglm_compute_apply_trace_data(sp_matfglm_t *matrix,
 
   st_fglm = realtime();
 
-  fglm_bms_data_set_prime(data_bms, prime);
-
-  compute_minpoly(param, data_fglm, data_bms, dimquot);
+  compute_minpoly_et(param, data_bms, dimquot);
 
   if(info_level){
     fprintf(VERBSTREAM, "Time spent to compute eliminating polynomial (elapsed): %.2f sec\n",
